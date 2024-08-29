@@ -1,9 +1,11 @@
 package com.techelevator.tenmo.services;
 
-
+import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Scanner;
 
 public class ConsoleService {
@@ -88,4 +90,38 @@ public class ConsoleService {
         System.out.println("An error occurred. Check the log for details.");
     }
 
+    public void printTransfers(List<Transfer> transfers) {
+        System.out.println("Transfers:");
+        for (Transfer transfer : transfers) {
+            System.out.println("ID: " + transfer.getTransferId() +
+                    ", To: " + transfer.getAccountTo() +
+                    ", Amount: $" + transfer.getAmount());
+        }
+    }
+
+    public void printTransferDetails(Transfer transfer) {
+        System.out.println("Transfer Details:");
+        System.out.println("ID: " + transfer.getTransferId());
+        System.out.println("From: " + transfer.getAccountFrom());
+        System.out.println("To: " + transfer.getAccountTo());
+        System.out.println("Type: " + transfer.getTransferTypeId());
+        System.out.println("Status: " + transfer.getTransferStatusId());
+        System.out.println("Amount: $" + transfer.getAmount());
+    }
+
+    public void printUsers(List<User> users) {
+        System.out.println("Users:");
+        for (User user : users) {
+            System.out.println("ID: " + user.getId() + ", Name: " + user.getUsername());
+        }
+    }
+
+    public void printPendingTransfers(List<Transfer> transfers) {
+        System.out.println("Pending Transfers:");
+        for (Transfer transfer : transfers) {
+            System.out.println("ID: " + transfer.getTransferId() +
+                    ", To: " + transfer.getAccountTo() +
+                    ", Amount: $" + transfer.getAmount());
+        }
+    }
 }
