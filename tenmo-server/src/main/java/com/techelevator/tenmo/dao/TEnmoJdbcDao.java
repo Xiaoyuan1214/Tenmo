@@ -140,10 +140,18 @@ public class TEnmoJdbcDao implements TEnmoDao {
                     "FROM transfer t " +
                     "JOIN account a ON t.account_from = a.account_id OR t.account_to = a.account_id "+
                     "WHERE a.user_id = ?";
-        SqlRowSet results = template.queryForRowSet(sql, userId);
-        while(results.next()){
-            Transfer transfer = mapRowToTransfer(results);
-            transfers.add(transfer);
+        try {
+            SqlRowSet results = template.queryForRowSet(sql, userId);
+            while (results.next()) {
+                Transfer transfer = mapRowToTransfer(results);
+                transfers.add(transfer);
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        } catch (Exception e) {
+            throw new DaoException("Failed to retrieve transfer", e);
         }
     return transfers;
     }
@@ -255,6 +263,13 @@ public class TEnmoJdbcDao implements TEnmoDao {
 
     @Override
     public void approveTransfer(int transferId) {
+      
+        
+//        String senderSql = "UPDATE account SET balance = balance - ?  WHERE account_id = ?";
+//        String receiverSql = "UPDATE account SET balance = balance + ? status =  WHERE account_id = ?";
+//
+//        template.update(senderSql, amount, senderAccount.getAccountId());
+//        template.update(receiverSql, amount, receiverAccount.getAccountId());
 
     }
 
