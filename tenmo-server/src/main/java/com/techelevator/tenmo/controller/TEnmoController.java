@@ -60,4 +60,15 @@ public class TEnmoController {
     public void rejectTransfer(@PathVariable int transferId) {
         tEnmoDao.rejectTransfer(transferId);
     }
+
+    // New endpoints for user-related operations
+    @RequestMapping(path = "/users", method = RequestMethod.GET)
+    public List<User> getAllUsers() {
+        return tEnmoDao.getAllUsers();
+    }
+
+    @RequestMapping(path = "/users/{userId}", method = RequestMethod.GET)
+    public User getUserById(@PathVariable int userId) {
+        return tEnmoDao.getUserById(userId);
+    }
 }

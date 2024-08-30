@@ -257,4 +257,14 @@ public class TEnmoJdbcDao implements TEnmoDao {
     public void rejectTransfer(int transferId) {
         updateTransferStatus(transferId, 3); // 3 = Rejected
     }
+
+    @Override
+    public List<User> getAllUsers() {
+        return null;
+    }
+
+    @Override
+    public User getUserById(int userId) {
+        return null;
+    }
 }

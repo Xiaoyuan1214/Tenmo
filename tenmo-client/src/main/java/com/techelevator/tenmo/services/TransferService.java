@@ -11,8 +11,6 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
-
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,7 +24,6 @@ public class TransferService {
         this.baseUrl = baseUrl;
         this.currentUser = currentUser;
     }
-
 
     public List<Transfer> getTransferHistory() {
         HttpEntity<Void> entity = createAuthEntity();
@@ -44,7 +41,7 @@ public class TransferService {
         HttpEntity<Void> entity = createAuthEntity();
         Transfer transfer = null;
         try {
-            ResponseEntity<Transfer> response = restTemplate.exchange(baseUrl + "transfer/" + transferId, HttpMethod.GET, entity, Transfer.class);
+            ResponseEntity<Transfer> response = restTemplate.exchange(baseUrl + "transfers/" + transferId, HttpMethod.GET, entity, Transfer.class);
             transfer = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -75,18 +72,18 @@ public class TransferService {
     }
 
     public boolean approveTransfer(int transferId) {
-        return updateTransferStatus(transferId, "approved");
+        return updateTransferStatus(transferId, "approve");
     }
 
     public boolean rejectTransfer(int transferId) {
-        return updateTransferStatus(transferId, "rejected");
+        return updateTransferStatus(transferId, "reject");
     }
 
     private boolean updateTransferStatus(int transferId, String status) {
         HttpEntity<Void> entity = createAuthEntity();
         boolean success = false;
         try {
-            restTemplate.exchange(baseUrl + "transfers/" + transferId + "/status/" + status, HttpMethod.PUT, entity, Void.class);
+            restTemplate.exchange(baseUrl + "transfers/" + transferId + "/" + status, HttpMethod.PUT, entity, Void.class);
             success = true;
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());

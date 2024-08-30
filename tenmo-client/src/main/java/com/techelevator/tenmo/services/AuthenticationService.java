@@ -29,8 +29,11 @@ public class AuthenticationService {
             ResponseEntity<AuthenticatedUser> response =
                     restTemplate.exchange(baseUrl + "login", HttpMethod.POST, entity, AuthenticatedUser.class);
             user = response.getBody();
+            if (user == null) {
+                BasicLogger.log("Failed to retrieve user after login. The response body is null.");
+            }
         } catch (RestClientResponseException | ResourceAccessException e) {
-            BasicLogger.log(e.getMessage());
+            BasicLogger.log("Error during login: " + e.getMessage());
         }
         return user;
     }
@@ -42,7 +45,7 @@ public class AuthenticationService {
             restTemplate.exchange(baseUrl + "register", HttpMethod.POST, entity, Void.class);
             success = true;
         } catch (RestClientResponseException | ResourceAccessException e) {
-            BasicLogger.log(e.getMessage());
+            BasicLogger.log("Error during registration: " + e.getMessage());
         }
         return success;
     }
