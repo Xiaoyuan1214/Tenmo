@@ -22,6 +22,9 @@ public class TEnmoController {
     }
 
     @RequestMapping(path = "sendmoney", method = RequestMethod.POST)
-    public Transfer sendTransfer(@RequestBody )
+    public Transfer sendTransfer(){
+
+        return null;
+    }
 
 }

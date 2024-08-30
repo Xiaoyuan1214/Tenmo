@@ -110,25 +110,41 @@ public class App {
 
     private void viewTransferHistory() {
         List<Transfer> transfers = transferService.getTransferHistory();
-        consoleService.printTransfers(transfers);
-        int transferId = consoleService.promptForInt("Please enter transfer ID to view details (0 to cancel): ");
-        if (transferId != 0) {
-            Transfer transfer = transferService.getTransferById(transferId);
-            consoleService.printTransferDetails(transfer);
+        if (transfers == null || transfers.isEmpty()) {
+            consoleService.printErrorMessage();
+        } else {
+            consoleService.printTransfers(transfers);
+            int transferId = consoleService.promptForInt("Please enter transfer ID to view details (0 to cancel): ");
+            if (transferId != 0) {
+                Transfer transfer = transferService.getTransferById(transferId);
+                if (transfer != null) {
+                    consoleService.printTransferDetails(transfer);
+                } else {
+                    consoleService.printErrorMessage();
+                }
+            }
         }
     }
 
     private void viewPendingRequests() {
         List<Transfer> pendingTransfers = transferService.getPendingTransfers();
-        consoleService.printPendingTransfers(pendingTransfers);
-        int transferId = consoleService.promptForInt("Please enter transfer ID to approve/reject (0 to cancel): ");
-        if (transferId != 0) {
-            handlePendingTransfer(transferId);
+        if (pendingTransfers == null || pendingTransfers.isEmpty()) {
+            consoleService.printErrorMessage();
+        } else {
+            consoleService.printPendingTransfers(pendingTransfers);
+            int transferId = consoleService.promptForInt("Please enter transfer ID to approve/reject (0 to cancel): ");
+            if (transferId != 0) {
+                handlePendingTransfer(transferId);
+            }
         }
     }
 
     private void sendBucks() {
         List<User> users = userService.getAllUsers();
+        if (users == null || users.isEmpty()) {
+            consoleService.printErrorMessage();
+            return;
+        }
         consoleService.printUsers(users);
         int userId = consoleService.promptForInt("Enter ID of user you are sending to (0 to cancel): ");
         if (userId == 0) return;
@@ -143,6 +159,10 @@ public class App {
 
     private void requestBucks() {
         List<User> users = userService.getAllUsers();
+        if (users == null || users.isEmpty()) {
+            consoleService.printErrorMessage();
+            return;
+        }
         consoleService.printUsers(users);
         int userId = consoleService.promptForInt("Enter ID of user you are requesting from (0 to cancel): ");
         if (userId == 0) return;
@@ -157,20 +177,24 @@ public class App {
 
     private void handlePendingTransfer(int transferId) {
         Transfer transfer = transferService.getTransferById(transferId);
-        consoleService.printTransferDetails(transfer);
-        int selection = consoleService.promptForMenuSelection("1: Approve\n2: Reject\n0: Don't approve or reject\nPlease choose an option: ");
-        if (selection == 1) {
-            if (transferService.approveTransfer(transferId)) {
-                System.out.println("Transfer approved!");
-            } else {
-                consoleService.printErrorMessage();
+        if (transfer != null) {
+            consoleService.printTransferDetails(transfer);
+            int selection = consoleService.promptForMenuSelection("1: Approve\n2: Reject\n0: Don't approve or reject\nPlease choose an option: ");
+            if (selection == 1) {
+                if (transferService.approveTransfer(transferId)) {
+                    System.out.println("Transfer approved!");
+                } else {
+                    consoleService.printErrorMessage();
+                }
+            } else if (selection == 2) {
+                if (transferService.rejectTransfer(transferId)) {
+                    System.out.println("Transfer rejected!");
+                } else {
+                    consoleService.printErrorMessage();
+                }
             }
-        } else if (selection == 2) {
-            if (transferService.rejectTransfer(transferId)) {
-                System.out.println("Transfer rejected!");
-            } else {
-                consoleService.printErrorMessage();
-            }
+        } else {
+            consoleService.printErrorMessage();
         }
     }
 }
