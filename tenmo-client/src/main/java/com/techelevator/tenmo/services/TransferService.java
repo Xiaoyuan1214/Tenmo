@@ -27,6 +27,7 @@ public class TransferService {
         this.currentUser = currentUser;
     }
 
+
     public List<Transfer> getTransferHistory() {
         HttpEntity<Void> entity = createAuthEntity();
         Transfer[] transfers = null;
@@ -43,7 +44,7 @@ public class TransferService {
         HttpEntity<Void> entity = createAuthEntity();
         Transfer transfer = null;
         try {
-            ResponseEntity<Transfer> response = restTemplate.exchange(baseUrl + "transfers/" + transferId, HttpMethod.GET, entity, Transfer.class);
+            ResponseEntity<Transfer> response = restTemplate.exchange(baseUrl + "transfer/" + transferId, HttpMethod.GET, entity, Transfer.class);
             transfer = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());

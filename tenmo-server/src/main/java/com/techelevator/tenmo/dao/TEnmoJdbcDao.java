@@ -17,17 +17,17 @@ import java.util.List;
 
 @Component
 public class TEnmoJdbcDao implements TEnmoDao {
+
     private JdbcTemplate template;
 
     public TEnmoJdbcDao(DataSource ds) {
-        template = new JdbcTemplate(ds);
+        this.template = new JdbcTemplate(ds);
     }
 
     private Account mapRowToAccount(SqlRowSet rowSet) {
         Account account = new Account();
         account.setAccountId(rowSet.getInt("account_id"));
         account.setUserId(rowSet.getInt("user_id"));
-        account.setUserName(rowSet.getString("username"));
         account.setBalance(rowSet.getBigDecimal("balance"));
         return account;
     }
@@ -35,8 +35,9 @@ public class TEnmoJdbcDao implements TEnmoDao {
     private Transfer mapRowToTransfer(SqlRowSet rowSet) {
         Transfer transfer = new Transfer();
         transfer.setTransferId(rowSet.getInt("transfer_id"));
-        transfer.setTransferTypeId(rowSet.getInt("transfer_status_id"));
-        transfer.setTransferStatusId(rowSet.getInt("account_from"));
+        transfer.setTransferTypeId(rowSet.getInt("transfer_type_id"));
+        transfer.setTransferStatusId(rowSet.getInt("transfer_status_id"));
+        transfer.setAccountFrom(rowSet.getInt("account_from"));
         transfer.setAccountTo(rowSet.getInt("account_to"));
         transfer.setAmount(rowSet.getBigDecimal("amount"));
         return transfer;
@@ -46,26 +47,22 @@ public class TEnmoJdbcDao implements TEnmoDao {
         User user = new User();
         user.setId(rowSet.getInt("user_id"));
         user.setUsername(rowSet.getString("username"));
-        user.setPassword(rowSet.getString("password_hash"));
         return user;
     }
 
     @Override
     public Account getAccountByUserId(int userId) {
         Account account = null;
-        String sql = "SELECT a.account_id, a.user_id, u.username, a.balance " +
-                "FROM account a " +
-                "JOIN tenmo_user u ON a.user_id = u.user_id " +
-                "WHERE a.user_id = ?";
+        String sql = "SELECT account_id, user_id, balance FROM account WHERE user_id = ?";
         try {
             SqlRowSet results = template.queryForRowSet(sql, userId);
             if (results.next()) {
                 account = mapRowToAccount(results);
             }
         } catch (CannotGetJdbcConnectionException e) {
-            System.out.println("Problem connecting");
+            throw new DaoException("Unable to connect to server or database", e);
         } catch (DataIntegrityViolationException e) {
-            System.out.println("Data problems");
+            throw new DaoException("Data integrity violation", e);
         }
         return account;
     }
@@ -73,18 +70,17 @@ public class TEnmoJdbcDao implements TEnmoDao {
     @Override
     public User getUserByUserName(String username) {
         User user = null;
-        String sql = "SELECT user_id, username, password_hash FROM tenmo_user WHERE username = ?";
+        String sql = "SELECT user_id, username FROM tenmo_user WHERE username = ?";
         try {
             SqlRowSet results = template.queryForRowSet(sql, username);
             if (results.next()) {
                 user = mapRowToUser(results);
             }
         } catch (CannotGetJdbcConnectionException e) {
-            System.out.println("Problem connecting");
+            throw new DaoException("Unable to connect to server or database", e);
         } catch (DataIntegrityViolationException e) {
-            System.out.println("Data problems");
+            throw new DaoException("Data integrity violation", e);
         }
-        System.out.println(user);
         return user;
     }
 
@@ -102,12 +98,6 @@ public class TEnmoJdbcDao implements TEnmoDao {
 
         if (senderAccount.getBalance().compareTo(amount) < 0) {
             throw new DaoException("Insufficient funds.");
-        }
-        if (receiverAccount == null) {
-            throw new DaoException("Receiver account not found");
-        }
-        if (senderAccount == null) {
-            throw new DaoException("Sender account not found.");
         }
 
         Transfer transfer = new Transfer();
@@ -127,7 +117,6 @@ public class TEnmoJdbcDao implements TEnmoDao {
             }
             String senderSql = "UPDATE account SET balance = balance - ? WHERE account_id = ?";
             String receiverSql = "UPDATE account SET balance = balance + ? WHERE account_id = ?";
-
             template.update(senderSql, amount, senderAccount.getAccountId());
             template.update(receiverSql, amount, receiverAccount.getAccountId());
         } catch (CannotGetJdbcConnectionException e) {
@@ -135,7 +124,7 @@ public class TEnmoJdbcDao implements TEnmoDao {
         } catch (DataIntegrityViolationException e) {
             throw new DaoException("Data integrity violation", e);
         } catch (Exception e) {
-            throw new DaoException("Failed to complete the transfer.");
+            throw new DaoException("Failed to complete the transfer.", e);
         }
         return transfer;
     }
@@ -147,10 +136,18 @@ public class TEnmoJdbcDao implements TEnmoDao {
                 "FROM transfer t " +
                 "JOIN account a ON t.account_from = a.account_id OR t.account_to = a.account_id " +
                 "WHERE a.user_id = ?";
-        SqlRowSet results = template.queryForRowSet(sql, userId);
-        while (results.next()) {
-            Transfer transfer = mapRowToTransfer(results);
-            transfers.add(transfer);
+        try {
+            SqlRowSet results = template.queryForRowSet(sql, userId);
+            while (results.next()) {
+                Transfer transfer = mapRowToTransfer(results);
+                transfers.add(transfer);
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        } catch (Exception e) {
+            throw new DaoException("Failed to retrieve transfers.", e);
         }
         return transfers;
     }
@@ -170,7 +167,7 @@ public class TEnmoJdbcDao implements TEnmoDao {
         } catch (DataIntegrityViolationException e) {
             throw new DaoException("Data integrity violation", e);
         } catch (Exception e) {
-            throw new DaoException("Failed to retrieve transfer", e);
+            throw new DaoException("Failed to retrieve transfer.", e);
         }
         return transfer;
     }
@@ -178,7 +175,7 @@ public class TEnmoJdbcDao implements TEnmoDao {
     @Override
     public Transfer requestTransfer(int fromUserId, int toUserId, BigDecimal amount) {
         if (fromUserId == toUserId) {
-            throw new IllegalArgumentException("Cannot request money to yourself.");
+            throw new IllegalArgumentException("Cannot request money from yourself.");
         }
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Transfer amount must be greater than zero.");
@@ -186,13 +183,6 @@ public class TEnmoJdbcDao implements TEnmoDao {
 
         Account senderAccount = getAccountByUserId(fromUserId);
         Account receiverAccount = getAccountByUserId(toUserId);
-
-        if (receiverAccount == null) {
-            throw new DaoException("Receiver account not found");
-        }
-        if (senderAccount == null) {
-            throw new DaoException("Sender account not found.");
-        }
 
         Transfer transfer = new Transfer();
         transfer.setTransferTypeId(1);
@@ -209,13 +199,12 @@ public class TEnmoJdbcDao implements TEnmoDao {
             if (results.next()) {
                 transfer.setTransferId(results.getInt("transfer_id"));
             }
-
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
         } catch (DataIntegrityViolationException e) {
             throw new DaoException("Data integrity violation", e);
         } catch (Exception e) {
-            throw new DaoException("Failed to complete the transfer.");
+            throw new DaoException("Failed to complete the transfer.", e);
         }
         return transfer;
     }
@@ -226,7 +215,7 @@ public class TEnmoJdbcDao implements TEnmoDao {
         String sql = "SELECT t.transfer_id, t.transfer_type_id, t.transfer_status_id, t.account_from, t.account_to, t.amount " +
                 "FROM transfer t " +
                 "JOIN account a ON t.account_from = a.account_id OR t.account_to = a.account_id " +
-                "WHERE a.user_id = ? AND t.transfer_status_id = (SELECT transfer_status_id FROM transfer_status WHERE transfer_status_desc = 'Pending')";
+                "WHERE a.user_id = ? AND t.transfer_status_id = 1";  // 1 = Pending
 
         try {
             SqlRowSet results = template.queryForRowSet(sql, userId);
@@ -239,7 +228,7 @@ public class TEnmoJdbcDao implements TEnmoDao {
         } catch (DataIntegrityViolationException e) {
             throw new DaoException("Data integrity violation", e);
         } catch (Exception e) {
-            throw new DaoException("Failed to retrieve pending transfers", e);
+            throw new DaoException("Failed to retrieve pending transfers.", e);
         }
 
         return pendingTransfers;
@@ -248,48 +237,24 @@ public class TEnmoJdbcDao implements TEnmoDao {
     @Override
     public boolean updateTransferStatus(int transferId, int transferStatusId) {
         String sql = "UPDATE transfer SET transfer_status_id = ? WHERE transfer_id = ?";
-        int numberOfRow = 0;
+        int numberOfRows = 0;
         try {
-            numberOfRow = template.update(sql, transferStatusId, transferId);
+            numberOfRows = template.update(sql, transferStatusId, transferId);
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
         } catch (DataIntegrityViolationException e) {
             throw new DaoException("Data integrity violation", e);
         }
-        return numberOfRow == 1;
+        return numberOfRows == 1;
     }
 
     @Override
     public void approveTransfer(int transferId) {
-        Transfer transfer = getTransferById(transferId);
-
-        Account senderAccount = getAccountByUserId(transfer.getAccountFrom());
-        Account receiverAccount = getAccountByUserId(transfer.getAccountTo());
-
-        if (senderAccount.getBalance().compareTo(transfer.getAmount()) < 0) {
-            throw new DaoException("Insufficient funds to approve the transfer.");
-        }
-
-        updateTransferStatus(transferId, 2);
-
-        String senderSql = "UPDATE account SET balance = balance - ? WHERE account_id = ?";
-        String receiverSql = "UPDATE account SET balance = balance + ? WHERE account_id = ?";
-
-        try {
-            template.update(senderSql, transfer.getAmount(), senderAccount.getAccountId());
-            template.update(receiverSql, transfer.getAmount(), receiverAccount.getAccountId());
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database", e);
-        } catch (DataIntegrityViolationException e) {
-            throw new DaoException("Data integrity violation", e);
-        } catch (Exception e) {
-            throw new DaoException("Failed to complete the transfer.");
-        }
+        updateTransferStatus(transferId, 2); // 2 = Approved
     }
 
     @Override
     public void rejectTransfer(int transferId) {
-        updateTransferStatus(transferId, 3);
+        updateTransferStatus(transferId, 3); // 3 = Rejected
     }
 }
-
