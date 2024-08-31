@@ -25,9 +25,13 @@ public class AccountService {
         HttpEntity<Void> entity = createAuthEntity();
         String url = baseUrl + "account";
         Account account = restTemplate.exchange(url, HttpMethod.GET, entity, Account.class).getBody();
+
+        if (account == null) {
+            throw new RuntimeException("Failed to retrieve account balance. The account information is null.");
+        }
+
         return account.getBalance();
     }
-
     private HttpEntity<Void> createAuthEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(currentUser.getToken());

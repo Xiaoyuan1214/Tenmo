@@ -10,7 +10,7 @@ public class User {
 
    private int id;
    private String username;
-   @JsonIgnore // prevent from being sent to client
+   @JsonIgnore
    private String password;
    @JsonIgnore
    private boolean activated;
