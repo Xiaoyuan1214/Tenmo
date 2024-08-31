@@ -11,7 +11,7 @@ import java.util.List;
 public interface TEnmoDao {
    
     public Account getAccountByUserId(int userId);
-    public User getUserByUserName(String username);
+//    public User getUserByUserName(String username);
     public Transfer sendTransfer(int fromUserId, int toUserId, BigDecimal amount);
     public List<Transfer> getTransferByUserId(int userId);
     public Transfer getTransferById(int transferId);

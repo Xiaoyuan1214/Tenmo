@@ -23,7 +23,7 @@ public class AccountService {
 
     public BigDecimal getBalance() {
         HttpEntity<Void> entity = createAuthEntity();
-        String url = baseUrl + "tenmo/account";
+        String url = baseUrl + "account";
         Account account = restTemplate.exchange(url, HttpMethod.GET, entity, Account.class).getBody();
         return account.getBalance();
     }

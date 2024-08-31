@@ -43,15 +43,18 @@ public class TEnmoJdbcDao implements TEnmoDao {
         return transfer;
     }
 
-    private User mapRowToUser(SqlRowSet rowSet) {
-        User user = new User();
-        user.setId(rowSet.getInt("user_id"));
-        user.setUsername(rowSet.getString("username"));
-        return user;
-    }
+//    private User mapRowToUser(SqlRowSet rowSet) {
+//        User user = new User();
+//        user.setId(rowSet.getInt("user_id"));
+//        user.setUsername(rowSet.getString("username"));
+//        return user;
+//    }
 
     @Override
     public Account getAccountByUserId(int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("User ID must be positive.");
+        }
         Account account = null;
         String sql = "SELECT account_id, user_id, balance FROM account WHERE user_id = ?";
         try {
@@ -67,22 +70,22 @@ public class TEnmoJdbcDao implements TEnmoDao {
         return account;
     }
 
-    @Override
-    public User getUserByUserName(String username) {
-        User user = null;
-        String sql = "SELECT user_id, username FROM tenmo_user WHERE username = ?";
-        try {
-            SqlRowSet results = template.queryForRowSet(sql, username);
-            if (results.next()) {
-                user = mapRowToUser(results);
-            }
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database", e);
-        } catch (DataIntegrityViolationException e) {
-            throw new DaoException("Data integrity violation", e);
-        }
-        return user;
-    }
+//    @Override
+//    public User getUserByUserName(String username) {
+//        User user = null;
+//        String sql = "SELECT user_id, username FROM tenmo_user WHERE username = ?";
+//        try {
+//            SqlRowSet results = template.queryForRowSet(sql, username);
+//            if (results.next()) {
+//                user = mapRowToUser(results);
+//            }
+//        } catch (CannotGetJdbcConnectionException e) {
+//            throw new DaoException("Unable to connect to server or database", e);
+//        } catch (DataIntegrityViolationException e) {
+//            throw new DaoException("Data integrity violation", e);
+//        }
+//        return user;
+//    }
 
     @Override
     public Transfer sendTransfer(int fromUserId, int toUserId, BigDecimal amount) {

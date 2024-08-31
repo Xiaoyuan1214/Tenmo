@@ -26,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
  * Controller to authenticate users.
  */
 @RestController
+@RequestMapping("/tenmo")
 public class AuthenticationController {
 
     private final TokenProvider tokenProvider;

@@ -59,7 +59,7 @@ public class TransferService {
 
     public boolean requestBucks(int senderUserId, BigDecimal amount) {
         Transfer transfer = new Transfer(senderUserId, currentUser.getUser().getId(), amount);
-        return createTransfer(transfer);
+        return requestTransfer(transfer);
     }
 
     public List<Transfer> getPendingTransfers() {
@@ -86,7 +86,7 @@ public class TransferService {
         HttpEntity<Void> entity = createAuthEntity();
         boolean success = false;
         try {
-            restTemplate.exchange(baseUrl + "transfers/" + transferId + "/status/" + status, HttpMethod.PUT, entity, Void.class);
+            restTemplate.exchange(baseUrl + "transfers/" + transferId + "/" + status, HttpMethod.PUT, entity, Void.class);
             success = true;
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -98,7 +98,18 @@ public class TransferService {
         HttpEntity<Transfer> entity = createTransferEntity(transfer);
         boolean success = false;
         try {
-            restTemplate.exchange(baseUrl + "transfers", HttpMethod.POST, entity, Void.class);
+            restTemplate.exchange(baseUrl + "sendmoney", HttpMethod.POST, entity, Void.class);
+            success = true;
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return success;
+    }
+    private boolean requestTransfer(Transfer transfer) {
+        HttpEntity<Transfer> entity = createTransferEntity(transfer);
+        boolean success = false;
+        try {
+            restTemplate.exchange(baseUrl + "requestmoney", HttpMethod.POST, entity, Void.class);
             success = true;
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
