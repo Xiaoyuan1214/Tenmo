@@ -64,8 +64,8 @@ public class TEnmoController {
     }
 
     @RequestMapping(path = "/transfers/{transferId}/approve", method = RequestMethod.PUT)
-    public void approveTransfer(@RequestBody Transfer transfer, @PathVariable int transferId) {
-        tEnmoDao.approveTransfer(transferId);
+    public void approveTransfer( @RequestBody Transfer transfer, @PathVariable int transferId) {
+        tEnmoDao.approveTransfer(transfer.getTransferId());
     }
 
     @RequestMapping(path = "/transfers/{transferId}/reject", method = RequestMethod.PUT)

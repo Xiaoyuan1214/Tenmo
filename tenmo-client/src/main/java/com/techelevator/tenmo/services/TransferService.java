@@ -80,10 +80,11 @@ public class TransferService {
     }
 
     private boolean updateTransferStatus(int transferId, String status) {
-        HttpEntity<Void> entity = createAuthEntity();
+        Transfer transfer = getTransferById(transferId);
+        HttpEntity<Transfer> entity = createTransferEntity(transfer);
         boolean success = false;
         try {
-            restTemplate.exchange(baseUrl + "transfers/" + transferId + "/" + status, HttpMethod.PUT, entity, Void.class);
+            restTemplate.exchange(baseUrl + "transfers/" + transferId + "/" + status, HttpMethod.PUT, entity, Boolean.class);
             success = true;
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());

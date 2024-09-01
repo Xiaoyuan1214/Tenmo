@@ -229,12 +229,61 @@ public class TEnmoJdbcDao implements TEnmoDao {
 
     @Override
     public void approveTransfer(int transferId) {
-        updateTransferStatus(transferId, 2); // 2 = Approved
+        Transfer transfer = getTransferById(transferId);
+        if (transfer == null) {
+            throw new DaoException("Transfer not found: " + transferId);
+        }
+
+
+        Account fromAccount = getAccountByAccountId(transfer.getAccountFrom());
+        Account toAccount = getAccountByAccountId(transfer.getAccountTo());
+
+        if (fromAccount.getBalance().compareTo(transfer.getAmount()) < 0) {
+            throw new DaoException("Insufficient funds for transfer.");
+        }
+
+
+        String updateSenderSql = "UPDATE account SET balance = balance - ? WHERE account_id = ?";
+        String updateReceiverSql = "UPDATE account SET balance = balance + ? WHERE account_id = ?";
+
+        try {
+            template.update(updateSenderSql, transfer.getAmount(), fromAccount.getAccountId());
+            template.update(updateReceiverSql, transfer.getAmount(), toAccount.getAccountId());
+            updateTransferStatus(transferId, 2); // 2 = Approved
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        } catch (Exception e) {
+            throw new DaoException("Failed to complete approval process", e);
+        }
     }
 
     @Override
     public void rejectTransfer(int transferId) {
-        updateTransferStatus(transferId, 3); // 3 = Rejected
+        if(!updateTransferStatus(transferId, 3)){
+            throw new DaoException("Failed to update transfer status");
+        }
     }
+
+    public Account getAccountByAccountId(int accountId){
+        Account account = null;
+        String sql = "SELECT * FROM account WHERE account_id = ?";
+        try {
+            SqlRowSet result = template.queryForRowSet(sql, accountId);
+            if (result.next()) {
+                account = mapRowToAccount(result);
+            }
+            return account;
+        }catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        } catch (Exception e) {
+            throw new DaoException("Failed to retrieve pending transfers.", e);
+        }
+
+    }
+
 
 }
