@@ -26,7 +26,10 @@ public class User {
       this.activated = true;
    }
 
-   public int getId() {
+    public User(int i, String user2, String user) {
+    }
+
+    public int getId() {
       return id;
    }
 
