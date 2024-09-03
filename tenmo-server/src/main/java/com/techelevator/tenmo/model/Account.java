@@ -6,9 +6,9 @@ import java.math.BigDecimal;
 
 public class Account {
     private int accountId;
-    @Min(value = 1, message = "The user ID is required.")
+    @Min(value = 1000, message = "The user ID is required.")
     private int userId;
- 
+    @Min(value = 0, message = "The balance is required.")
     private BigDecimal  balance;
     public Account () {}
 

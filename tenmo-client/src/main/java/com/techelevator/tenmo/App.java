@@ -129,7 +129,7 @@ public class App {
     private void viewPendingRequests() {
         List<Transfer> pendingTransfers = transferService.getPendingTransfers();
         if (pendingTransfers == null || pendingTransfers.isEmpty()) {
-            consoleService.printErrorMessage();
+            System.out.println("There is no pending transaction!");
         } else {
             consoleService.printPendingTransfers(pendingTransfers);
             int transferId = consoleService.promptForInt("Please enter transfer ID to approve/reject (0 to cancel): ");

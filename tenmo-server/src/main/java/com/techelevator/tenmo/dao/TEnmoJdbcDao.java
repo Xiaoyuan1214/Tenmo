@@ -1,9 +1,7 @@
 package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.exception.DaoException;
-import com.techelevator.tenmo.model.Account;
-import com.techelevator.tenmo.model.Transfer;
-import com.techelevator.tenmo.model.User;
+import com.techelevator.tenmo.model.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -42,6 +40,41 @@ public class TEnmoJdbcDao implements TEnmoDao {
         transfer.setAmount(rowSet.getBigDecimal("amount"));
         return transfer;
     }
+//    public TransferType getTransferTypeNameById(int typeId){
+//        TransferType transferType = new TransferType();
+//        String sql = "SELECT transfer_type_id, transfer_type_desc FROM transfer_type WHERE transfer_type_id = ?";
+//        try{
+//            SqlRowSet results = template.queryForRowSet(sql,typeId);
+//            if(results.next()) {
+//
+//                transferType.setTransferTypeId(results.getInt("transfer_type_id"));
+//                transferType.setTransferTypeDesc(results.getString("transfer_type_desc"));
+//            }
+//            return transferType;
+//        } catch (CannotGetJdbcConnectionException e) {
+//            throw new DaoException("Unable to connect to server or database", e);
+//        } catch (DataIntegrityViolationException e) {
+//            throw new DaoException("Data integrity violation", e);
+//        }
+//    }
+//    public TransferStatus getTransferStatusNameById(int statusId){
+//        TransferStatus transferStatus = new TransferStatus();
+//        String sql = "SELECT ransfer_status_id, transfer_status_desc FROM transfer_status WHERE transfer_status_id = ?";
+//        try{
+//            SqlRowSet results = template.queryForRowSet(sql,statusId);
+//            if(results.next()) {
+//
+//                transferStatus.setTransferStatusId(results.getInt("transfer_status_id"));
+//                transferStatus.setTransferStatusDesc(results.getString("transfer_status_desc"));
+//            }
+//            return transferStatus;
+//        } catch (CannotGetJdbcConnectionException e) {
+//            throw new DaoException("Unable to connect to server or database", e);
+//        } catch (DataIntegrityViolationException e) {
+//            throw new DaoException("Data integrity violation", e);
+//        }
+//    }
+
 
     @Override
     public Account getAccountByUserId(int userId) {
@@ -284,6 +317,7 @@ public class TEnmoJdbcDao implements TEnmoDao {
         }
 
     }
+
 
 
 }
